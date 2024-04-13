@@ -20,8 +20,9 @@
           <button @click="fetchJokesByCategory('misc')">misc</button>
           <button @click="fetchJokesByCategory('dark')">dark</button>
           <button @click="fetchJokesByCategory('pun')">pun</button>
-          <button @click="fetchJokesByCategory('spooky')">spooky</button>
-          <button @click="fetchJokesByCategory('christmas')">christmas</button>
+          <button @click="fetchJokesByCategory('christmas')">Christmas</button>
+          <button @click="fetchJokesByCategory('spooky')">Spooky</button>
+
         </div>
       </div>
   
@@ -30,60 +31,67 @@
           <h1>Jokes Searched</h1>
           <h3>Here are some jokes we found for you!</h3>
         </div>
+
         <div class="jokes">
-          <p v-for="joke in jokes" :key="joke.id">
+          <p v-for="joke in filteredJokes" :key="joke.id">
             {{ joke.joke }}
           </p>
         </div>
+
+
+
       </div>
     </div>
   </template>
-  
 
-
-  <script>
+<script>
   import axios from 'axios';
   
   export default {
-    data() {
-      return {
-        jokes: [],
-        isLoading: false,
-        error: null,
-        selectedCategory: '',
-      };
-    },
-    methods: {
-      fetchJokesByCategory(category) {
+  data() {
+    return {
+      jokes: [],
+      isLoading: false,
+      error: null,
+      selectedCategory: '',
+    };
+  },
+  computed: {
+    filteredJokes() {
+      return this.jokes.filter(joke => joke.joke);
+    }
+  },
+  methods: {
+    async fetchJokesByCategory(category) {
+      try {
         this.isLoading = true;
         this.jokes = []; // Clear previous jokes
         this.error = null;
         const url = `https://v2.jokeapi.dev/joke/${category}?amount=10`;
-        axios
-          .get(url)
-          .then(response => {
-            this.jokes = response.data.jokes; // Assuming jokes are in 'jokes' property
-          })
-          .catch(error => {
-            this.error = error;
-          })
-          .finally(() => {
-            this.isLoading = false;
-          });
-      },
+        const response = await axios.get(url);
+        if (response.status !== 200) {
+          throw new Error(`Failed to fetch jokes. Status code: ${response.status}`);
+        }
+        this.jokes = response.data.jokes;
+      } catch (error) {
+        this.error = error.message;
+      } finally {
+        this.isLoading = false;
+      }
     },
-  };
+    async fetchRandomJokes() {
+      const categories = ['any', 'programming', 'misc', 'dark', 'pun'];
+      const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+      await this.fetchJokesByCategory(randomCategory);
+    }
+  },
+  mounted() {
+    this.fetchRandomJokes();
+  }
+};
   </script>
   
   
-
-
-  
-
-
-
-
-
 <style>
 .flex-page {
   display: flex;
@@ -96,7 +104,7 @@
   width: 45%; /* Adjust width as needed */
   background: linear-gradient(to right, #434343, #000000); /* Dark gradient background */
   color: white; /* White text for better contrast */
-  padding: 20px;
+  padding: 0px;
 }
 
 .right-header {
@@ -160,7 +168,7 @@ h3 {
 
 /* Jokes & Buttons Styling */
 p {
-  background-color: #fafafa; /* Light gray background for jokes */
+  background-color: #fafafa; /* Light gr~ay background for jokes */
   border-radius: 5px;
   padding: 15px;
   margin: 10px 0; /* Adjust margin for spacing between jokes */
